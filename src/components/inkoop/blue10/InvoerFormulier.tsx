@@ -64,6 +64,7 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
   const [velden, setVelden] = useState<Velden>(legeVelden(jaar));
   const [leveranciers, setLeveranciers] = useState<Leverancier[]>([]);
   const [loadingLev, setLoadingLev] = useState(true);
+  const [levError, setLevError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<"idle" | "concept_ok" | "verwerkt_ok" | "error">("idle");
@@ -73,11 +74,24 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
     fetch("/api/inkoop/leveranciers")
       .then(async (r) => {
         const text = await r.text();
-        if (!text) return [];
-        try { return JSON.parse(text); } catch { return []; }
+        if (!text) return { data: [], error: "Lege respons van server" };
+        try {
+          const parsed = JSON.parse(text);
+          if (Array.isArray(parsed)) return { data: parsed, error: null };
+          // API gaf een fout terug (bijv. { error: "..." })
+          return { data: [], error: parsed?.error ?? JSON.stringify(parsed) };
+        } catch {
+          return { data: [], error: `JSON parse fout: ${text.slice(0, 100)}` };
+        }
       })
-      .then((d) => setLeveranciers(Array.isArray(d) ? d : []))
-      .catch(() => setLeveranciers([]))
+      .then(({ data, error }) => {
+        setLeveranciers(data);
+        if (error) setLevError(error);
+      })
+      .catch((e) => {
+        setLeveranciers([]);
+        setLevError(e?.message ?? "Netwerk fout");
+      })
       .finally(() => setLoadingLev(false));
   }, []);
 
@@ -172,6 +186,10 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
           <label className={lbl}>Leverancier</label>
           {loadingLev ? (
             <div className="h-7 bg-gray-100 rounded animate-pulse" />
+          ) : levError ? (
+            <div className="text-[10px] text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1.5">
+              ⚠ Fout bij laden leveranciers: {levError}
+            </div>
           ) : (
             <LeverancierSelect
               leveranciers={leveranciers}
