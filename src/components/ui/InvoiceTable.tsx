@@ -11,6 +11,7 @@ interface Invoice {
   AmountDC: number;
   DueDate: string;
   YourRef: string;
+  Status?: number;
 }
 
 function formatEuro(amount: number): string {
@@ -85,10 +86,16 @@ export default function InvoiceTable({
                         className={`text-xs px-2 py-1 rounded-full font-medium ${
                           isOverdue
                             ? "bg-red-100 text-red-700"
+                            : inv.Status === 50
+                            ? "bg-yellow-100 text-yellow-700"
                             : "bg-green-100 text-green-700"
                         }`}
                       >
-                        {isOverdue ? `${daysOverdue}d te laat` : "Op tijd"}
+                        {isOverdue
+                          ? `${daysOverdue}d te laat`
+                          : inv.Status === 50
+                          ? "Gedeeltelijk"
+                          : "Op tijd"}
                       </span>
                     </td>
                   </tr>

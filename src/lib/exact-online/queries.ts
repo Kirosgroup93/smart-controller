@@ -23,6 +23,7 @@ export interface OutstandingInvoice {
   AmountDC: number;
   DueDate: string;
   YourRef: string;
+  Status?: number;
 }
 
 export async function getBalanceSheet(
@@ -68,9 +69,10 @@ export async function getOutstandingReceivables(
   const client = createExactClient(accessToken, division);
   const response = await client.get("/salesinvoice/SalesInvoices", {
     params: {
-      $filter: "Status eq 20",
-      $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef",
+      $filter: "Status ne 100",
+      $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef,Status",
       $orderby: "DueDate asc",
+      $top: 100,
     },
   });
   return response.data.d.results;
@@ -83,9 +85,10 @@ export async function getOutstandingPayables(
   const client = createExactClient(accessToken, division);
   const response = await client.get("/purchaseorder/PurchaseInvoices", {
     params: {
-      $filter: "Status eq 20",
-      $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef",
+      $filter: "Status ne 100",
+      $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef,Status",
       $orderby: "DueDate asc",
+      $top: 100,
     },
   });
   return response.data.d.results;
