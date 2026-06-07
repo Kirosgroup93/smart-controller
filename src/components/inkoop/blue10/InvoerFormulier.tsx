@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Save, CheckCircle, Loader2 } from "lucide-react";
 import type { InkoopDoc } from "./DocumentenLijst";
 import LeverancierSelect from "@/components/ui/LeverancierSelect";
+import NieuweLeverancierModal from "@/components/inkoop/NieuweLeverancierModal";
 
 interface Leverancier { ID: string; Name: string; Code: string; VATNumber?: string; IBAN?: string; }
 
@@ -65,6 +66,7 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
   const [leveranciers, setLeveranciers] = useState<Leverancier[]>([]);
   const [loadingLev, setLoadingLev] = useState(true);
   const [levError, setLevError] = useState<string | null>(null);
+  const [nieuweLevOpen, setNieuweLevOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<"idle" | "concept_ok" | "verwerkt_ok" | "error">("idle");
@@ -171,6 +173,22 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
   const lbl = "block text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5";
 
   return (
+    <>
+    <NieuweLeverancierModal
+      open={nieuweLevOpen}
+      onClose={() => setNieuweLevOpen(false)}
+      onAangemaakt={(lev) => {
+        // Voeg toe aan lokale lijst en selecteer direct
+        setLeveranciers((prev) => [...prev, lev].sort((a, b) => a.Name.localeCompare(b.Name)));
+        setVelden((prev) => ({
+          ...prev,
+          leverancier_id: lev.ID,
+          leverancier_naam: lev.Name,
+          btw_nummer: lev.VATNumber ?? prev.btw_nummer,
+        }));
+        setStatus("idle");
+      }}
+    />
     <div className="flex flex-col h-full bg-white">
       {/* Header */}
       <div className="px-4 py-2.5 border-b border-gray-200 bg-slate-50 shrink-0">
@@ -183,7 +201,17 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
 
         {/* Leverancier */}
         <div>
-          <label className={lbl}>Leverancier</label>
+          <div className="flex items-center justify-between mb-0.5">
+            <label className={lbl} style={{ marginBottom: 0 }}>Leverancier</label>
+            <button
+              type="button"
+              onClick={() => setNieuweLevOpen(true)}
+              title="Nieuwe leverancier aanmaken"
+              className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 px-1.5 py-0.5 rounded transition-colors"
+            >
+              <span className="text-sm leading-none">+</span> Nieuw
+            </button>
+          </div>
           {loadingLev ? (
             <div className="h-7 bg-gray-100 rounded animate-pulse" />
           ) : levError ? (
@@ -371,5 +399,6 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
         </button>
       </div>
     </div>
+    </>
   );
 }

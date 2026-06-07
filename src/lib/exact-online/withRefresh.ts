@@ -93,6 +93,55 @@ export async function exactGet(
 }
 
 /**
+ * Voert een Exact Online API POST uit met automatische token refresh.
+ */
+export async function exactPost(
+  path: string,
+  body: Record<string, unknown>
+): Promise<unknown> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data } = await supabase
+    .from("exact_connections")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+  if (!data) throw new Error("Geen Exact verbinding");
+
+  let conn = await ensureFreshToken(data as ExactConnection, user.id);
+
+  async function doPost(token: string) {
+    const client = createExactClient(token, conn.division);
+    return client.post(path, body);
+  }
+
+  try {
+    const res = await doPost(conn.access_token);
+    return res.data?.d ?? res.data;
+  } catch (err: unknown) {
+    const status = (err as { response?: { status?: number } })?.response?.status;
+    if (status !== 401) throw err;
+    try {
+      const tokens = await refreshAccessToken(conn.refresh_token);
+      const newExpiresAt = new Date(Date.now() + tokens.expires_in * 1000).toISOString();
+      const admin = createAdminClient();
+      await admin.from("exact_connections").update({
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        expires_at: newExpiresAt,
+      }).eq("user_id", user.id);
+      conn = { ...conn, access_token: tokens.access_token };
+      const res = await doPost(tokens.access_token);
+      return res.data?.d ?? res.data;
+    } catch {
+      throw new Error("EXACT_SESSION_EXPIRED");
+    }
+  }
+}
+
+/**
  * Geeft een Exact axios client terug met een vers access token.
  */
 export async function getExactClient(): Promise<{ client: AxiosInstance; conn: ExactConnection } | null> {
