@@ -47,10 +47,10 @@ export async function GET() {
     const totalPayables = payables.reduce((s: number, i: { AmountDC: number }) => s + i.AmountDC, 0);
 
     // Sla snapshot op (fire-and-forget)
-    supabase.from("financial_snapshots").insert([
+    void supabase.from("financial_snapshots").insert([
       { user_id: user.id, division: conn.division, snapshot_date: new Date().toISOString(), type: "receivables", data: receivables },
       { user_id: user.id, division: conn.division, snapshot_date: new Date().toISOString(), type: "payables", data: payables },
-    ]).then(() => {}).catch(() => {});
+    ]);
 
     return NextResponse.json({
       receivables,
