@@ -31,16 +31,16 @@ export async function GET() {
       }),
     ]);
 
-    const mapInvoice = (r: Record<string, unknown>) => ({
-      InvoiceID: String(r.HID ?? r.ID ?? r.EntryNumber ?? ""),
-      InvoiceNumber: Number(r.EntryNumber ?? r.InvoiceNumber ?? 0),
-      AccountName: String(r.AccountName ?? r.SupplierName ?? ""),
-      AmountDC: Number(r.Amount ?? r.AmountDC ?? 0),
-      DueDate: String(r.DueDate ?? ""),
-      InvoiceDate: String(r.InvoiceDate ?? ""),
-      Description: String(r.Description ?? ""),
-      YourRef: String(r.YourRef ?? ""),
-    });
+    const mapInvoice = (r: unknown) => { const row = r as Record<string, unknown>; return ({
+      InvoiceID: String(row.HID ?? row.ID ?? row.EntryNumber ?? ""),
+      InvoiceNumber: Number(row.EntryNumber ?? row.InvoiceNumber ?? 0),
+      AccountName: String(row.AccountName ?? row.SupplierName ?? ""),
+      AmountDC: Number(row.Amount ?? row.AmountDC ?? 0),
+      DueDate: String(row.DueDate ?? ""),
+      InvoiceDate: String(row.InvoiceDate ?? ""),
+      Description: String(row.Description ?? ""),
+      YourRef: String(row.YourRef ?? ""),
+    }); };
 
     const receivables = (receivablesRaw ?? []).map(mapInvoice);
     const payables = (payablesRaw ?? []).map(mapInvoice);
