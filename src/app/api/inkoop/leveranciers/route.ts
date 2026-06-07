@@ -5,7 +5,7 @@ export async function GET() {
   try {
     // Minimale request: alleen ID en Name, geen filter
     const results = await exactGet("/crm/Accounts", {
-      $select: "ID,Name,Code,VATNumber,IBAN",
+      $select: "ID,Name,Code,VATNumber",
       $top: 100,
     });
     return NextResponse.json(results ?? []);
