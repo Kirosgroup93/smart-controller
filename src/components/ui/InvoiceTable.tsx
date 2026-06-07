@@ -32,9 +32,15 @@ export default function InvoiceTable({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/supabase/financial-data")
-      .then((r) => r.json())
-      .then((data) => setInvoices(type === "receivables" ? data.receivables : data.payables))
+    fetch(`/api/supabase/financial-data?t=${Date.now()}`)
+      .then(async (r) => {
+        const text = await r.text();
+        if (!text) return;
+        try {
+          const data = JSON.parse(text);
+          setInvoices(type === "receivables" ? (data.receivables ?? []) : (data.payables ?? []));
+        } catch { /* ignore parse errors */ }
+      })
       .finally(() => setLoading(false));
   }, [type]);
 

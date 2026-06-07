@@ -69,7 +69,7 @@ export async function getOutstandingReceivables(
   const client = createExactClient(accessToken, division);
   const response = await client.get("/salesinvoice/SalesInvoices", {
     params: {
-      $filter: "Status ne 100",
+      $filter: "Status lt 100",
       $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef,Status",
       $orderby: "DueDate asc",
       $top: 100,
@@ -85,7 +85,7 @@ export async function getOutstandingPayables(
   const client = createExactClient(accessToken, division);
   const response = await client.get("/purchaseorder/PurchaseInvoices", {
     params: {
-      $filter: "Status ne 100",
+      $filter: "Status lt 100",
       $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef,Status",
       $orderby: "DueDate asc",
       $top: 100,
