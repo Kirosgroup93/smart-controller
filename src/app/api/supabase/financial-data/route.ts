@@ -32,10 +32,10 @@ export async function GET() {
     ]);
 
     const mapInvoice = (r: Record<string, unknown>) => ({
-      InvoiceID: String(r.HID ?? r.EntryNumber ?? ""),
-      InvoiceNumber: Number(r.EntryNumber ?? 0),
-      AccountName: String(r.AccountName ?? ""),
-      AmountDC: Number(r.Amount ?? 0),
+      InvoiceID: String(r.HID ?? r.ID ?? r.EntryNumber ?? ""),
+      InvoiceNumber: Number(r.EntryNumber ?? r.InvoiceNumber ?? 0),
+      AccountName: String(r.AccountName ?? r.SupplierName ?? ""),
+      AmountDC: Number(r.Amount ?? r.AmountDC ?? 0),
       DueDate: String(r.DueDate ?? ""),
       YourRef: String(r.YourRef ?? ""),
     });
