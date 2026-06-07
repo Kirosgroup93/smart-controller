@@ -3,6 +3,7 @@ import KPICards from "@/components/ui/KPICards";
 import ExactConnectButton from "@/components/ui/ExactConnectButton";
 import FinancialChart from "@/components/charts/FinancialChart";
 import InvoiceTable from "@/components/ui/InvoiceTable";
+import SessionExpiredBanner from "@/components/ui/SessionExpiredBanner";
 
 export default async function DashboardPage({
   searchParams,
@@ -52,6 +53,7 @@ export default async function DashboardPage({
         ) : (
           <>
             {division && <p className="text-xs text-gray-400">Divisie: {division}</p>}
+            <SessionExpiredBanner />
             <KPICards userId={user.id} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <FinancialChart userId={user.id} />

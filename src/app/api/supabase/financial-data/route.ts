@@ -61,6 +61,9 @@ export async function GET() {
     });
   } catch (err: unknown) {
     const msg = (err as Error)?.message ?? "Fout bij ophalen data";
+    if (msg === "EXACT_SESSION_EXPIRED") {
+      return NextResponse.json({ error: "EXACT_SESSION_EXPIRED" }, { status: 401 });
+    }
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

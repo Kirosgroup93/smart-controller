@@ -72,6 +72,16 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
         <div className="p-6 space-y-3">
           {[...Array(4)].map((_, i) => <div key={i} className="h-10 bg-gray-100 rounded animate-pulse" />)}
         </div>
+      ) : error === "EXACT_SESSION_EXPIRED" ? (
+        <div className="px-6 py-8 text-center space-y-3">
+          <p className="text-sm text-amber-700">Exact Online sessie verlopen.</p>
+          <a
+            href="/api/exact-online/token"
+            className="inline-block text-xs bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            Opnieuw koppelen
+          </a>
+        </div>
       ) : error ? (
         <div className="px-6 py-8 text-center text-sm text-red-500">{error}</div>
       ) : (
