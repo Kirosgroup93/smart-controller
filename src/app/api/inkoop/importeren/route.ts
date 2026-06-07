@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 
-const BUCKET = "facturen-import";
+const BUCKET = "facturen";
 
 async function getUser() {
   const supabase = await createClient();

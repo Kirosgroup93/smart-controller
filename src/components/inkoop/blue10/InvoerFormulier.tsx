@@ -70,8 +70,13 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
 
   useEffect(() => {
     fetch("/api/inkoop/leveranciers")
-      .then((r) => r.json())
+      .then(async (r) => {
+        const text = await r.text();
+        if (!text) return [];
+        try { return JSON.parse(text); } catch { return []; }
+      })
       .then((d) => setLeveranciers(Array.isArray(d) ? d : []))
+      .catch(() => setLeveranciers([]))
       .finally(() => setLoadingLev(false));
   }, []);
 
