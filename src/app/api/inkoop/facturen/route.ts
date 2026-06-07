@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
   const exact = createExactClient(conn.access_token, conn.division);
   const filter = status && status !== "all" ? `Status eq ${status}` : undefined;
 
-  const response = await exact.get("/purchaseorder/PurchaseInvoices", {
+  const response = await exact.get("/purchase/PurchaseInvoices", {
     params: {
       ...(filter ? { $filter: filter } : {}),
       $select: "ID,InvoiceID,InvoiceNumber,InvoiceDate,DueDate,Description,AmountDC,VATAmountDC,AmountDCExclVAT,Status,SupplierName,YourRef",
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   if (body.totaal_bedrag != null) payload.AmountDC = body.totaal_bedrag;
 
   try {
-    const response = await exact.post("/purchaseorder/PurchaseInvoices", payload);
+    const response = await exact.post("/purchase/PurchaseInvoices", payload);
     return NextResponse.json(response.data.d);
   } catch (err: unknown) {
     const detail = (err as { response?: { data?: unknown } })?.response?.data;

@@ -37,6 +37,6 @@ export async function PUT(
   if (body.btw_bedrag !== undefined) payload.VATAmountDC = body.btw_bedrag;
   if (body.totaal_bedrag !== undefined) payload.AmountDC = body.totaal_bedrag;
 
-  await exact.put(`/purchaseorder/PurchaseInvoices(guid'${id}')`, payload);
+  await exact.put(`/purchase/PurchaseInvoices(guid'${id}')`, payload);
   return NextResponse.json({ success: true });
 }

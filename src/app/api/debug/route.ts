@@ -31,7 +31,8 @@ export async function GET() {
   const tests = [
     { key: "accounts", path: "/crm/Accounts", params: { $filter: "IsSupplier eq true", $top: 2, $select: "ID,Name,Code" } },
     { key: "glaccounts", path: "/financial/GLAccounts", params: { $top: 2, $select: "ID,Code,Description" } },
-    { key: "costcenters", path: "/hrm/CostCenters", params: { $top: 2, $select: "ID,Code,Description" } },
+    { key: "costcenters", path: "/hrm/Costcenters", params: { $top: 2, $select: "ID,Code,Description" } },
+    { key: "purchaseinvoices", path: "/purchase/PurchaseInvoices", params: { $top: 2, $select: "ID,InvoiceNumber,Status" } },
     { key: "payables", path: "/read/financial/PayablesList", params: { $top: 2 } },
     { key: "receivables", path: "/read/financial/ReceivablesList", params: { $top: 2 } },
   ];
