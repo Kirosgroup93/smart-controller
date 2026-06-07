@@ -96,9 +96,7 @@ export async function exactGet(path: string, params?: Record<string, unknown>) {
       const res = await doRequest(tokens.access_token);
       return res.data.d.results;
     } catch {
-      // Refresh token verlopen — verbinding verwijderen zodat gebruiker opnieuw koppelt
-      await supabase.from("exact_connections").delete().eq("user_id", user.id);
-      throw new Error("Exact Online sessie verlopen. Koppel opnieuw via het dashboard.");
+      throw new Error("EXACT_SESSION_EXPIRED");
     }
   }
 }
