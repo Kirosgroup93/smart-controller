@@ -37,7 +37,8 @@ export default function InvoiceTable({
       .finally(() => setLoading(false));
   }, [type]);
 
-  const title = type === "receivables" ? "Openstaande vorderingen" : "Openstaande schulden";
+  const title = type === "receivables" ? "Openstaande vorderingen" : "Openstaande inkoopfacturen";
+  const sorted = [...invoices].sort((a, b) => new Date(a.DueDate).getTime() - new Date(b.DueDate).getTime());
 
   return (
     <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -64,7 +65,7 @@ export default function InvoiceTable({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {invoices.slice(0, 10).map((inv) => {
+              {sorted.slice(0, 10).map((inv) => {
                 const daysOverdue = differenceInDays(new Date(), new Date(inv.DueDate));
                 const isOverdue = daysOverdue > 0;
                 return (

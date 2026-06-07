@@ -48,6 +48,7 @@ export default async function DashboardPage({
             <FinancialChart userId={user!.id} />
             <InvoiceTable userId={user!.id} type="receivables" />
           </div>
+          <InvoiceTable userId={user!.id} type="payables" />
         </>
       )}
     </div>
