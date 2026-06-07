@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
 import { Search, Pencil, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { nl } from "date-fns/locale";
@@ -29,7 +29,11 @@ function formatDate(val: string | null | undefined) {
   }
 }
 
-export default function GeboekteFacturenTabel() {
+export interface GeboekteFacturenTabelHandle {
+  ververs: () => void;
+}
+
+const GeboekteFacturenTabel = forwardRef<GeboekteFacturenTabelHandle>((_, ref) => {
   const [facturen, setFacturen] = useState<GeboekteFactuur[]>([]);
   const [loading, setLoading] = useState(true);
   const [zoekterm, setZoekterm] = useState("");
@@ -42,16 +46,15 @@ export default function GeboekteFacturenTabel() {
       const params = new URLSearchParams();
       if (statusFilter !== "all") params.set("status", statusFilter);
       const res = await fetch(`/api/inkoop/facturen?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        setFacturen(Array.isArray(data) ? data : []);
-      }
+      if (res.ok) setFacturen(Array.isArray(await res.json()) ? await res.clone().json() : []);
     } finally {
       setLoading(false);
     }
   }, [statusFilter]);
 
   useEffect(() => { laadFacturen(); }, [laadFacturen]);
+
+  useImperativeHandle(ref, () => ({ ververs: laadFacturen }));
 
   const gefilterd = facturen.filter((f) => {
     if (!zoekterm) return true;
@@ -65,7 +68,6 @@ export default function GeboekteFacturenTabel() {
 
   return (
     <div>
-      {/* Zoekbalk + filter */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -97,7 +99,6 @@ export default function GeboekteFacturenTabel() {
         </button>
       </div>
 
-      {/* Tabel */}
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
@@ -125,7 +126,7 @@ export default function GeboekteFacturenTabel() {
               ))
             ) : gefilterd.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-10 text-center text-gray-400">
+                <td colSpan={8} className="px-4 py-10 text-center text-gray-400 text-sm">
                   Geen facturen gevonden
                 </td>
               </tr>
@@ -134,9 +135,7 @@ export default function GeboekteFacturenTabel() {
                 const status = STATUS_LABELS[f.Status] ?? { label: String(f.Status), className: "bg-gray-100 text-gray-600" };
                 return (
                   <tr key={f.ID} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900 max-w-[160px] truncate">
-                      {f.SupplierName || "—"}
-                    </td>
+                    <td className="px-4 py-3 font-medium text-gray-900 max-w-[160px] truncate">{f.SupplierName || "—"}</td>
                     <td className="px-4 py-3 text-gray-600">{f.InvoiceNumber || "—"}</td>
                     <td className="px-4 py-3 text-gray-600">{formatDate(f.InvoiceDate)}</td>
                     <td className="px-4 py-3 text-right text-gray-800">{formatEuro(f.AmountDCExclVAT)}</td>
@@ -163,7 +162,7 @@ export default function GeboekteFacturenTabel() {
         </table>
       </div>
 
-      {gefilterd.length > 0 && (
+      {gefilterd.length > 0 && !loading && (
         <p className="mt-2 text-xs text-gray-400">{gefilterd.length} factuur/facturen</p>
       )}
 
@@ -176,4 +175,7 @@ export default function GeboekteFacturenTabel() {
       )}
     </div>
   );
-}
+});
+
+GeboekteFacturenTabel.displayName = "GeboekteFacturenTabel";
+export default GeboekteFacturenTabel;

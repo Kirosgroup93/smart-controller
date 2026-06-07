@@ -17,7 +17,6 @@ async function getConnection() {
   return data as ExactConnection | null;
 }
 
-// GET: haal inkoopfacturen op uit Exact Online
 export async function GET(request: NextRequest) {
   const conn = await getConnection();
   if (!conn) return NextResponse.json({ error: "Niet geautoriseerd of geen Exact verbinding" }, { status: 401 });
@@ -26,10 +25,7 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status");
 
   const exact = createExactClient(conn.access_token, conn.division);
-
-  const filter = status && status !== "all"
-    ? `Status eq ${status}`
-    : undefined;
+  const filter = status && status !== "all" ? `Status eq ${status}` : undefined;
 
   const response = await exact.get("/purchaseorder/PurchaseInvoices", {
     params: {
@@ -43,7 +39,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(response.data.d.results);
 }
 
-// POST: boek een nieuwe inkoopfactuur in Exact Online
 export async function POST(request: NextRequest) {
   const conn = await getConnection();
   if (!conn) return NextResponse.json({ error: "Niet geautoriseerd of geen Exact verbinding" }, { status: 401 });
@@ -51,18 +46,26 @@ export async function POST(request: NextRequest) {
   const body = await request.json();
   const exact = createExactClient(conn.access_token, conn.division);
 
-  const payload = {
+  const payload: Record<string, unknown> = {
     InvoiceNumber: body.factuurnummer,
-    InvoiceDate: body.factuurdatum ? `/Date(${new Date(body.factuurdatum).getTime()})/` : undefined,
-    DueDate: body.vervaldatum ? `/Date(${new Date(body.vervaldatum).getTime()})/` : undefined,
-    Description: body.omschrijving,
-    AmountDCExclVAT: body.bedrag_excl_btw,
-    VATAmountDC: body.btw_bedrag,
-    AmountDC: body.totaal_bedrag,
-    SupplierName: body.leveranciersnaam,
-    YourRef: body.factuurnummer,
+    Description: body.omschrijving || body.factuurnummer,
+    Journal: body.dagboek ?? 70,
   };
 
-  const response = await exact.post("/purchaseorder/PurchaseInvoices", payload);
-  return NextResponse.json(response.data.d);
+  if (body.leverancier_id) payload.Supplier = body.leverancier_id;
+  if (body.factuurdatum) payload.InvoiceDate = `/Date(${new Date(body.factuurdatum).getTime()})/`;
+  if (body.vervaldatum) payload.DueDate = `/Date(${new Date(body.vervaldatum).getTime()})/`;
+  if (body.bedrag_excl_btw != null) payload.AmountDCExclVAT = body.bedrag_excl_btw;
+  if (body.btw_bedrag != null) payload.VATAmountDC = body.btw_bedrag;
+  if (body.totaal_bedrag != null) payload.AmountDC = body.totaal_bedrag;
+
+  try {
+    const response = await exact.post("/purchaseorder/PurchaseInvoices", payload);
+    return NextResponse.json(response.data.d);
+  } catch (err: unknown) {
+    const detail = (err as { response?: { data?: unknown } })?.response?.data;
+    const msg = detail ? JSON.stringify(detail) : (err instanceof Error ? err.message : "Onbekende fout");
+    console.error("Exact Online POST PurchaseInvoices:", msg);
+    return NextResponse.json({ error: msg }, { status: 502 });
+  }
 }
