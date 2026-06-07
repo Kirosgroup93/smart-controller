@@ -81,18 +81,24 @@ export async function exactGet(path: string, params?: Record<string, unknown>) {
     if (status !== 401) throw err;
 
     // Token vernieuwen
-    const tokens = await refreshAccessToken(conn.refresh_token);
-    await supabase
-      .from("exact_connections")
-      .update({
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token,
-        expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
-      })
-      .eq("user_id", user.id);
+    try {
+      const tokens = await refreshAccessToken(conn.refresh_token);
+      await supabase
+        .from("exact_connections")
+        .update({
+          access_token: tokens.access_token,
+          refresh_token: tokens.refresh_token,
+          expires_at: new Date(Date.now() + tokens.expires_in * 1000).toISOString(),
+        })
+        .eq("user_id", user.id);
 
-    conn = { ...conn, access_token: tokens.access_token };
-    const res = await doRequest(tokens.access_token);
-    return res.data.d.results;
+      conn = { ...conn, access_token: tokens.access_token };
+      const res = await doRequest(tokens.access_token);
+      return res.data.d.results;
+    } catch {
+      // Refresh token verlopen — verbinding verwijderen zodat gebruiker opnieuw koppelt
+      await supabase.from("exact_connections").delete().eq("user_id", user.id);
+      throw new Error("Exact Online sessie verlopen. Koppel opnieuw via het dashboard.");
+    }
   }
 }
