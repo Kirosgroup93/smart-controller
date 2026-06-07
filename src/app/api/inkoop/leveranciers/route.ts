@@ -3,18 +3,15 @@ import { exactGet } from "@/lib/exact-online/withRefresh";
 
 export async function GET() {
   try {
+    // Minimale request: alleen ID en Name, geen filter
     const results = await exactGet("/crm/Accounts", {
-      $select: "ID,Name,Code,VATNumber,IBAN,IsSupplier",
-      $orderby: "Name asc",
-      $top: 500,
+      $select: "ID,Name,Code,VATNumber,IBAN",
+      $top: 100,
     });
-    // IsSupplier is niet filterbaar via OData — filter hier client-side
-    const leveranciers = (results ?? []).filter(
-      (r) => (r as Record<string, unknown>).IsSupplier === true
-    );
-    return NextResponse.json(leveranciers);
+    return NextResponse.json(results ?? []);
   } catch (err: unknown) {
-    const msg = (err as Error)?.message ?? "Fout";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const axiosErr = err as { response?: { status?: number; data?: unknown }; message?: string };
+    const detail = axiosErr?.response?.data ?? axiosErr?.message ?? "Fout";
+    return NextResponse.json({ error: String(typeof detail === "object" ? JSON.stringify(detail) : detail) }, { status: 500 });
   }
 }
