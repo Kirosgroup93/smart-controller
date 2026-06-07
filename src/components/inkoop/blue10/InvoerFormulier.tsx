@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Save, CheckCircle, Loader2 } from "lucide-react";
 import type { InkoopDoc } from "./DocumentenLijst";
+import LeverancierSelect from "@/components/ui/LeverancierSelect";
 
 interface Leverancier { ID: string; Name: string; Code: string; VATNumber?: string; IBAN?: string; }
 
@@ -172,35 +173,28 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
           {loadingLev ? (
             <div className="h-7 bg-gray-100 rounded animate-pulse" />
           ) : (
-            <>
-              <input
-                list="leveranciers-list"
-                className={inp}
-                placeholder="Zoek op naam of code…"
-                value={velden.leverancier_naam}
-                onChange={(e) => {
-                  const zoek = e.target.value;
-                  set("leverancier_naam", zoek);
-                  const match = leveranciers.find(
-                    (l) => l.Name === zoek || `${l.Code} – ${l.Name}` === zoek
-                  );
-                  if (match) {
-                    set("leverancier_id", match.ID);
-                    if (match.VATNumber) set("btw_nummer", match.VATNumber);
-                    if (match.IBAN) set("iban", match.IBAN);
-                  } else {
-                    set("leverancier_id", "");
-                  }
-                }}
-              />
-              <datalist id="leveranciers-list">
-                {leveranciers.map((l) => (
-                  <option key={l.ID} value={l.Name}>
-                    {l.Code ? `${l.Code} – ${l.Name}` : l.Name}
-                  </option>
-                ))}
-              </datalist>
-            </>
+            <LeverancierSelect
+              leveranciers={leveranciers}
+              value={velden.leverancier_id}
+              onChange={(lev) => {
+                if (lev) {
+                  setVelden((prev) => ({
+                    ...prev,
+                    leverancier_id: lev.ID,
+                    leverancier_naam: lev.Name,
+                    btw_nummer: lev.VATNumber ?? prev.btw_nummer,
+                    iban: lev.IBAN ?? prev.iban,
+                  }));
+                } else {
+                  setVelden((prev) => ({
+                    ...prev,
+                    leverancier_id: "",
+                    leverancier_naam: "",
+                  }));
+                }
+                setStatus("idle");
+              }}
+            />
           )}
         </div>
 
