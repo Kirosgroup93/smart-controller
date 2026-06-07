@@ -11,10 +11,10 @@ import type { AxiosInstance } from "axios";
  */
 async function ensureFreshToken(conn: ExactConnection, userId: string): Promise<ExactConnection> {
   const expiresAt = conn.expires_at ? new Date(conn.expires_at).getTime() : 0;
-  const twoMinutesFromNow = Date.now() + 2 * 60 * 1000;
 
-  // Token is nog minstens 2 minuten geldig — geen refresh nodig
-  if (expiresAt > twoMinutesFromNow) return conn;
+  // Alleen refreshen als token daadwerkelijk verlopen is
+  // Exact Online rate-limit: geen refresh als token nog geldig is
+  if (expiresAt > Date.now()) return conn;
 
   // Proactief vernieuwen
   const tokens = await refreshAccessToken(conn.refresh_token);
