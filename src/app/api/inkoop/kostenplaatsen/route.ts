@@ -3,10 +3,9 @@ import { exactGet } from "@/lib/exact-online/withRefresh";
 
 export async function GET() {
   try {
-    const results = await exactGet("/crm/Accounts", {
-      $filter: "IsSupplier eq true",
-      $select: "ID,Name,Code,VATNumber,IBAN",
-      $orderby: "Name asc",
+    const results = await exactGet("/hrm/CostCenters", {
+      $select: "ID,Code,Description",
+      $orderby: "Code asc",
       $top: 250,
     });
     return NextResponse.json(results ?? []);

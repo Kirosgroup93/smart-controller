@@ -1,36 +1,23 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createExactClient } from "@/lib/exact-online/client";
-import type { ExactConnection } from "@/types/database";
+import { exactGet } from "@/lib/exact-online/withRefresh";
 
 export async function GET() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { data: connData } = await supabase.from("exact_connections").select("*").eq("user_id", user.id).single();
-  if (!connData) return NextResponse.json({ error: "Geen verbinding" }, { status: 404 });
-
-  const conn = connData as ExactConnection;
-  const client = createExactClient(conn.access_token, conn.division);
-
-  const results: Record<string, unknown> = {};
-
   const endpoints = [
-    "/read/financial/PayablesList",
-    "/read/financial/ReceivablesList",
-    "/purchaseorder/PurchaseInvoices",
-    "/salesinvoice/SalesInvoices",
+    { path: "/read/financial/PayablesList", params: { $top: 3 } },
+    { path: "/read/financial/ReceivablesList", params: { $top: 3 } },
+    { path: "/crm/Accounts", params: { $filter: "IsSupplier eq true", $top: 3, $select: "ID,Name,Code" } },
+    { path: "/financial/GLAccounts", params: { $top: 3, $select: "ID,Code,Description" } },
+    { path: "/hrm/CostCenters", params: { $top: 3, $select: "ID,Code,Description" } },
   ];
 
+  const results: Record<string, unknown> = {};
   for (const ep of endpoints) {
     try {
-      const res = await client.get(ep, { params: { $top: 5 } });
-      results[ep] = { count: res.data?.d?.results?.length, sample: res.data?.d?.results?.slice(0, 2) };
+      const data = await exactGet(ep.path, ep.params);
+      results[ep.path] = { count: data?.length, sample: data?.slice(0, 2) };
     } catch (e: unknown) {
-      results[ep] = { error: (e as { message?: string })?.message, status: (e as { response?: { status?: number } })?.response?.status };
+      results[ep.path] = { error: (e as Error)?.message };
     }
   }
-
   return NextResponse.json(results);
 }

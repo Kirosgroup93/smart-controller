@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Save, CheckCircle, Loader2 } from "lucide-react";
 import type { InkoopDoc } from "./DocumentenLijst";
 
-interface Leverancier { ID: string; Name: string; Code: string; }
+interface Leverancier { ID: string; Name: string; Code: string; VATNumber?: string; IBAN?: string; }
 
 const BTW_PERCENTAGES = [0, 9, 21] as const;
 type BtwPct = (typeof BTW_PERCENTAGES)[number];
@@ -172,20 +172,35 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
           {loadingLev ? (
             <div className="h-7 bg-gray-100 rounded animate-pulse" />
           ) : (
-            <select
-              value={velden.leverancier_id}
-              onChange={(e) => {
-                const lev = leveranciers.find((l) => l.ID === e.target.value);
-                set("leverancier_id", e.target.value);
-                set("leverancier_naam", lev?.Name ?? "");
-              }}
-              className={inp}
-            >
-              <option value="">— Selecteer leverancier —</option>
-              {leveranciers.map((l) => (
-                <option key={l.ID} value={l.ID}>{l.Code ? `${l.Code} – ` : ""}{l.Name}</option>
-              ))}
-            </select>
+            <>
+              <input
+                list="leveranciers-list"
+                className={inp}
+                placeholder="Zoek op naam of code…"
+                value={velden.leverancier_naam}
+                onChange={(e) => {
+                  const zoek = e.target.value;
+                  set("leverancier_naam", zoek);
+                  const match = leveranciers.find(
+                    (l) => l.Name === zoek || `${l.Code} – ${l.Name}` === zoek
+                  );
+                  if (match) {
+                    set("leverancier_id", match.ID);
+                    if (match.VATNumber) set("btw_nummer", match.VATNumber);
+                    if (match.IBAN) set("iban", match.IBAN);
+                  } else {
+                    set("leverancier_id", "");
+                  }
+                }}
+              />
+              <datalist id="leveranciers-list">
+                {leveranciers.map((l) => (
+                  <option key={l.ID} value={l.Name}>
+                    {l.Code ? `${l.Code} – ${l.Name}` : l.Name}
+                  </option>
+                ))}
+              </datalist>
+            </>
           )}
         </div>
 
