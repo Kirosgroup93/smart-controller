@@ -5,9 +5,10 @@ import { ZoomIn, ZoomOut, RotateCcw, FileX, Loader2 } from "lucide-react";
 
 interface Props {
   docId: string | null;
+  storagePath?: string | null;
 }
 
-export default function PDFViewer({ docId }: Props) {
+export default function PDFViewer({ docId, storagePath }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [fout, setFout] = useState(false);
@@ -19,7 +20,11 @@ export default function PDFViewer({ docId }: Props) {
     setFout(false);
     setUrl(null);
 
-    fetch(`/api/inkoop/document/${docId}`)
+    const endpoint = storagePath
+      ? `/api/inkoop/importeren/pdf?path=${encodeURIComponent(storagePath)}`
+      : `/api/inkoop/document/${docId}`;
+
+    fetch(endpoint)
       .then(async (res) => {
         if (!res.ok) { setFout(true); return; }
         const blob = await res.blob();
@@ -30,7 +35,7 @@ export default function PDFViewer({ docId }: Props) {
 
     return () => { if (url) URL.revokeObjectURL(url); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [docId]);
+  }, [docId, storagePath]);
 
   return (
     <div className="flex flex-col h-full bg-gray-700">

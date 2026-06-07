@@ -15,6 +15,9 @@ export interface InkoopDoc {
   VATAmountDC: number;
   Status: number;
   YourRef: string;
+  // voor geïmporteerde bestanden
+  source?: "exact" | "import";
+  storagePath?: string;
 }
 
 function formatEuro(v: number) {
@@ -48,8 +51,34 @@ export default function DocumentenLijst({ geselecteerd, onSelect }: Props) {
   async function laad() {
     setLoading(true);
     try {
-      const res = await fetch("/api/inkoop/facturen");
-      if (res.ok) setDocs(await res.json());
+      // Haal geïmporteerde bestanden op uit Supabase Storage
+      const importRes = await fetch("/api/inkoop/importeren");
+      const importData = importRes.ok ? await importRes.json() : [];
+
+      const importDocs: InkoopDoc[] = (importData as { name: string; path: string; size: number }[]).map((f) => ({
+        ID: `import:${f.path}`,
+        InvoiceNumber: f.name.replace(/^\d+-/, "").replace(".pdf", ""),
+        InvoiceDate: "",
+        DueDate: "",
+        SupplierName: "Geïmporteerd",
+        Description: f.name,
+        AmountDC: 0,
+        AmountDCExclVAT: 0,
+        VATAmountDC: 0,
+        Status: 10,
+        YourRef: "",
+        source: "import",
+        storagePath: f.path,
+      }));
+
+      // Haal Exact Online facturen op
+      const exactRes = await fetch("/api/inkoop/facturen");
+      const exactDocs: InkoopDoc[] = exactRes.ok
+        ? (await exactRes.json()).map((d: InkoopDoc) => ({ ...d, source: "exact" }))
+        : [];
+
+      // Geïmporteerde bestanden eerst, dan Exact facturen
+      setDocs([...importDocs, ...exactDocs]);
     } finally {
       setLoading(false);
     }
@@ -101,34 +130,39 @@ export default function DocumentenLijst({ geselecteerd, onSelect }: Props) {
         ) : (
           gefilterd.map((doc) => {
             const actief = doc.ID === geselecteerd;
+            const isImport = doc.source === "import";
             return (
               <button
                 key={doc.ID}
                 onClick={() => onSelect(doc)}
                 className={`w-full text-left px-3 py-2.5 border-b border-gray-100 transition-colors ${
-                  actief
-                    ? "bg-blue-600 text-white"
-                    : "hover:bg-blue-50 text-gray-800"
+                  actief ? "bg-blue-600 text-white" : "hover:bg-blue-50 text-gray-800"
                 }`}
               >
                 <div className="flex items-start gap-2">
-                  <FileText className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${actief ? "text-blue-200" : "text-gray-400"}`} />
+                  <FileText className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${actief ? "text-blue-200" : isImport ? "text-blue-400" : "text-gray-400"}`} />
                   <div className="min-w-0 flex-1">
                     <p className={`text-xs font-medium truncate ${actief ? "text-white" : "text-gray-800"}`}>
-                      {doc.SupplierName || "—"}
+                      {isImport ? doc.InvoiceNumber : (doc.SupplierName || "—")}
                     </p>
-                    <div className="flex items-center justify-between mt-0.5">
-                      <span className={`text-xs ${actief ? "text-blue-100" : "text-gray-500"}`}>
-                        {doc.InvoiceNumber || "—"} · {parseDate(doc.InvoiceDate)}
+                    <div className="flex items-center justify-between mt-0.5 gap-1">
+                      <span className={`text-xs truncate ${actief ? "text-blue-100" : "text-gray-500"}`}>
+                        {isImport ? "Geïmporteerd" : `${doc.InvoiceNumber || "—"} · ${parseDate(doc.InvoiceDate)}`}
                       </span>
-                      <span className={`text-xs font-semibold ${actief ? "text-white" : "text-gray-700"}`}>
-                        {formatEuro(doc.AmountDC)}
-                      </span>
+                      {!isImport && (
+                        <span className={`text-xs font-semibold shrink-0 ${actief ? "text-white" : "text-gray-700"}`}>
+                          {formatEuro(doc.AmountDC)}
+                        </span>
+                      )}
                     </div>
                     <span className={`mt-1 inline-block text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                      actief ? "bg-white/20 text-white" : (STATUS_KLEUR[doc.Status] ?? "bg-gray-100 text-gray-500")
+                      actief
+                        ? "bg-white/20 text-white"
+                        : isImport
+                        ? "bg-blue-100 text-blue-700"
+                        : (STATUS_KLEUR[doc.Status] ?? "bg-gray-100 text-gray-500")
                     }`}>
-                      {doc.Status === 10 ? "Concept" : doc.Status === 20 ? "Openstaand" : doc.Status === 50 ? "Gedeeltelijk" : doc.Status === 100 ? "Betaald" : doc.Status}
+                      {isImport ? "Nieuw" : doc.Status === 10 ? "Concept" : doc.Status === 20 ? "Openstaand" : doc.Status === 50 ? "Gedeeltelijk" : doc.Status === 100 ? "Betaald" : doc.Status}
                     </span>
                   </div>
                 </div>

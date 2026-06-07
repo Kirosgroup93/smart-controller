@@ -5,12 +5,14 @@ import DocumentenLijst, { type InkoopDoc } from "@/components/inkoop/blue10/Docu
 import InvoerFormulier from "@/components/inkoop/blue10/InvoerFormulier";
 import PDFViewer from "@/components/inkoop/blue10/PDFViewer";
 import CodingsRegelTabel from "@/components/inkoop/blue10/CodingsRegelTabel";
+import FactuurFlowStappen from "@/components/inkoop/FactuurFlowStappen";
 
 export default function FacturenBoekenPage() {
   const [geselecteerd, setGeselecteerd] = useState<InkoopDoc | null>(null);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
+      <FactuurFlowStappen actief={3} />
       {/* Drie kolommen */}
       <div className="flex flex-1 overflow-hidden">
         {/* Kolom 1: Documentenlijst */}
@@ -31,7 +33,10 @@ export default function FacturenBoekenPage() {
 
         {/* Kolom 3: PDF viewer */}
         <div className="flex-1 overflow-hidden">
-          <PDFViewer docId={geselecteerd?.ID ?? null} />
+          <PDFViewer
+            docId={geselecteerd?.ID ?? null}
+            storagePath={geselecteerd?.storagePath ?? null}
+          />
         </div>
       </div>
 
