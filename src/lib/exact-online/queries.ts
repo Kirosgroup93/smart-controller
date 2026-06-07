@@ -1,3 +1,4 @@
+import axios from "axios";
 import { createExactClient } from "./client";
 
 export interface BalanceSheetEntry {
@@ -91,9 +92,16 @@ export async function getOutstandingPayables(
 }
 
 export async function getCurrentDivision(accessToken: string): Promise<number> {
-  const client = createExactClient(accessToken, 0);
-  const response = await client.get("/current/Me", {
-    params: { $select: "CurrentDivision" },
-  });
+  // /current/Me is een divisionless endpoint — geen divisienummer in de URL
+  const response = await axios.get(
+    "https://start.exactonline.nl/api/v1/current/Me",
+    {
+      params: { $select: "CurrentDivision" },
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json",
+      },
+    }
+  );
   return response.data.d.results[0].CurrentDivision;
 }
