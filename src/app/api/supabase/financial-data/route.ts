@@ -20,12 +20,12 @@ export async function GET() {
   try {
     const [receivablesRaw, payablesRaw] = await Promise.all([
       exactGet("/read/financial/ReceivablesList", {
-        $select: "HID,AccountName,Amount,Description,DueDate,EntryNumber,YourRef",
+        $select: "HID,AccountName,Amount,Description,DueDate,InvoiceDate,EntryNumber,YourRef",
         $orderby: "DueDate asc",
         $top: 100,
       }),
       exactGet("/read/financial/PayablesList", {
-        $select: "HID,AccountName,Amount,Description,DueDate,EntryNumber,YourRef",
+        $select: "HID,AccountName,Amount,Description,DueDate,InvoiceDate,EntryNumber,YourRef",
         $orderby: "DueDate asc",
         $top: 100,
       }),
@@ -37,6 +37,8 @@ export async function GET() {
       AccountName: String(r.AccountName ?? r.SupplierName ?? ""),
       AmountDC: Number(r.Amount ?? r.AmountDC ?? 0),
       DueDate: String(r.DueDate ?? ""),
+      InvoiceDate: String(r.InvoiceDate ?? ""),
+      Description: String(r.Description ?? ""),
       YourRef: String(r.YourRef ?? ""),
     });
 

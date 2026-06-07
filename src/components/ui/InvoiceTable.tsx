@@ -10,6 +10,8 @@ interface Invoice {
   AccountName: string;
   AmountDC: number;
   DueDate: string;
+  InvoiceDate?: string;
+  Description?: string;
   YourRef: string;
   Status?: number;
 }
@@ -78,8 +80,10 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
               <tr>
                 <th className="px-4 py-3 text-left">Relatie</th>
+                <th className="px-4 py-3 text-left">Omschrijving</th>
                 <th className="px-4 py-3 text-left">Factuurnr.</th>
                 <th className="px-4 py-3 text-right">Bedrag</th>
+                <th className="px-4 py-3 text-left">Factuurdatum</th>
                 <th className="px-4 py-3 text-left">Vervaldatum</th>
                 <th className="px-4 py-3 text-left">Status</th>
               </tr>
@@ -92,8 +96,12 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
                 return (
                   <tr key={inv.InvoiceID || inv.InvoiceNumber} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 text-sm font-medium text-gray-900">{inv.AccountName || "—"}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600 max-w-[200px] truncate" title={inv.Description}>{inv.Description || "—"}</td>
                     <td className="px-4 py-3 text-sm text-gray-600">{inv.InvoiceNumber || "—"}</td>
                     <td className="px-4 py-3 text-sm text-right font-medium">{formatEuro(inv.AmountDC ?? 0)}</td>
+                    <td className="px-4 py-3 text-sm text-gray-600">
+                      {inv.InvoiceDate ? (() => { const d = parseExactDate(inv.InvoiceDate); return d ? format(d, "d MMM yyyy", { locale: nl }) : "—"; })() : "—"}
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600">
                       {due ? format(due, "d MMM yyyy", { locale: nl }) : "—"}
                     </td>
@@ -111,7 +119,7 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
               })}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="px-4 py-8 text-center text-gray-400 text-sm">
+                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400 text-sm">
                     Geen openstaande facturen gevonden
                   </td>
                 </tr>
