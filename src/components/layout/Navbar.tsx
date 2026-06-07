@@ -50,6 +50,20 @@ const NAV_ITEMS: NavItem[] = [
     ],
   },
   {
+    label: "Instellingen",
+    href: "/instellingen",
+    categories: [
+      {
+        label: "Algemeen",
+        items: [
+          { label: "Exact Online koppeling", href: "/instellingen/exact" },
+          { label: "Gebruikers",             href: "/instellingen/gebruikers" },
+          { label: "Bedrijfsgegevens",       href: "/instellingen/bedrijf" },
+        ],
+      },
+    ],
+  },
+  {
     label: "Verkoop",
     href: "/verkoop",
     categories: [
