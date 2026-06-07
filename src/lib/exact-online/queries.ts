@@ -24,6 +24,10 @@ export interface OutstandingInvoice {
   DueDate: string;
   YourRef: string;
   Status?: number;
+  // aging list velden
+  HID?: string;
+  Amount?: number;
+  Description?: string;
 }
 
 export async function getBalanceSheet(
@@ -67,15 +71,21 @@ export async function getOutstandingReceivables(
   division: number
 ): Promise<OutstandingInvoice[]> {
   const client = createExactClient(accessToken, division);
-  const response = await client.get("/salesinvoice/SalesInvoices", {
+  const response = await client.get("/read/financial/ReceivablesList", {
     params: {
-      $filter: "Status lt 100",
-      $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef,Status",
+      $select: "HID,AccountName,Amount,CurrencyCode,Description,DueDate,EntryNumber,InvoiceDate,YourRef",
       $orderby: "DueDate asc",
       $top: 100,
     },
   });
-  return response.data.d.results;
+  return (response.data.d.results ?? []).map((r: Record<string, unknown>) => ({
+    InvoiceID: String(r.HID ?? r.EntryNumber ?? ""),
+    InvoiceNumber: Number(r.EntryNumber ?? 0),
+    AccountName: String(r.AccountName ?? ""),
+    AmountDC: Number(r.Amount ?? 0),
+    DueDate: String(r.DueDate ?? ""),
+    YourRef: String(r.YourRef ?? ""),
+  }));
 }
 
 export async function getOutstandingPayables(
@@ -83,15 +93,21 @@ export async function getOutstandingPayables(
   division: number
 ): Promise<OutstandingInvoice[]> {
   const client = createExactClient(accessToken, division);
-  const response = await client.get("/purchaseorder/PurchaseInvoices", {
+  const response = await client.get("/read/financial/PayablesList", {
     params: {
-      $filter: "Status lt 100",
-      $select: "InvoiceID,InvoiceNumber,AccountName,AmountDC,DueDate,YourRef,Status",
+      $select: "HID,AccountName,Amount,CurrencyCode,Description,DueDate,EntryNumber,InvoiceDate,YourRef",
       $orderby: "DueDate asc",
       $top: 100,
     },
   });
-  return response.data.d.results;
+  return (response.data.d.results ?? []).map((r: Record<string, unknown>) => ({
+    InvoiceID: String(r.HID ?? r.EntryNumber ?? ""),
+    InvoiceNumber: Number(r.EntryNumber ?? 0),
+    AccountName: String(r.AccountName ?? ""),
+    AmountDC: Number(r.Amount ?? 0),
+    DueDate: String(r.DueDate ?? ""),
+    YourRef: String(r.YourRef ?? ""),
+  }));
 }
 
 export async function getCurrentDivision(accessToken: string): Promise<number> {
