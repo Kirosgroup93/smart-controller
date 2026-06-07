@@ -18,15 +18,13 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const connection = connectionData as Pick<ExactConnection, "division" | "expires_at"> | null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <Navbar
         email={user.email ?? ""}
         hasConnection={!!connection}
         division={connection?.division}
       />
-      <main className="max-w-7xl mx-auto px-6 py-8">
-        {children}
-      </main>
+      {children}
     </div>
   );
 }

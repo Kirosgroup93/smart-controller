@@ -23,7 +23,8 @@ export default async function DashboardPage({
   const params = await searchParams;
 
   return (
-    <div className="space-y-8">
+    <div className="flex-1 overflow-auto">
+    <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
       {params.error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
           Fout bij verbinding: {decodeURIComponent(params.error)}
@@ -49,6 +50,7 @@ export default async function DashboardPage({
           </div>
         </>
       )}
+    </div>
     </div>
   );
 }

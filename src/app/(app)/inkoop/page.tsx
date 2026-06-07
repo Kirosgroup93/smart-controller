@@ -16,7 +16,8 @@ export default async function InkoopPage() {
   const connection = connectionData as Pick<ExactConnection, "division"> | null;
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 overflow-auto">
+    <div className="max-w-7xl mx-auto px-6 py-8 space-y-6">
       <div>
         <h1 className="text-xl font-bold text-gray-900">Inkoop</h1>
         <p className="text-sm text-gray-500 mt-0.5">Openstaande inkoopfacturen en schulden</p>
@@ -30,6 +31,7 @@ export default async function InkoopPage() {
       ) : (
         <InvoiceTable userId={user!.id} type="payables" />
       )}
+    </div>
     </div>
   );
 }
