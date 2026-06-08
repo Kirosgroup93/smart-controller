@@ -41,9 +41,7 @@ export async function POST(req: Request) {
     if (land?.trim())      payload.Country = land.trim();
     if (telefoon?.trim())  payload.Phone = telefoon.trim();
     if (email?.trim())     payload.Email = email.trim();
-    if (valuta?.trim())    payload.Currency = valuta.trim();
-    // Postbus, GLAccountPurchase en PaymentConditionPurchase weggelaten
-    // — onzekere veldnamen die 400 kunnen veroorzaken
+    if (valuta?.trim())    payload.PurchaseCurrency = valuta.trim(); // was "Currency" — niet geldig
 
     console.log("[leveranciers POST] payload:", JSON.stringify(payload));
 
@@ -78,12 +76,14 @@ export async function POST(req: Request) {
 
     // Contact aanmaken (apart endpoint)
     if (accountId && (voornaam?.trim() || achternaam?.trim())) {
-      const contactPayload: Record<string, unknown> = { Account: accountId };
+      const contactPayload: Record<string, unknown> = {
+        Account: accountId,
+        IsMainContact: true,
+      };
       if (voornaam?.trim())        contactPayload.FirstName = voornaam.trim();
       if (achternaam?.trim())      contactPayload.LastName = achternaam.trim();
-      if (contactTelefoon?.trim()) contactPayload.Phone = contactTelefoon.trim();
-      if (contactEmail?.trim())    contactPayload.Email = contactEmail.trim();
-      if (functie?.trim())         contactPayload.JobTitleDescription = functie.trim();
+      if (contactTelefoon?.trim()) contactPayload.BusinessPhone = contactTelefoon.trim();
+      if (contactEmail?.trim())    contactPayload.BusinessEmail = contactEmail.trim();
       try {
         await exactPost("/crm/Contacts", contactPayload);
       } catch {
