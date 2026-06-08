@@ -56,11 +56,9 @@ export async function GET(req: NextRequest) {
       responseType: "arraybuffer",
     });
 
-    const contentType = response.headers["content-type"] ?? "application/pdf";
-
     return new NextResponse(response.data as ArrayBuffer, {
       headers: {
-        "Content-Type": contentType,
+        "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename="${fileName}"`,
       },
     });
