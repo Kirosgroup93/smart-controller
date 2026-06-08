@@ -67,6 +67,7 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
   const [loadingLev, setLoadingLev] = useState(true);
   const [levError, setLevError] = useState<string | null>(null);
   const [nieuweLevOpen, setNieuweLevOpen] = useState(false);
+  const [editLev, setEditLev] = useState<{ ID: string; Name: string; Code: string } | null>(null);
   const [saving, setSaving] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [status, setStatus] = useState<"idle" | "concept_ok" | "verwerkt_ok" | "error">("idle");
@@ -175,8 +176,10 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
   return (
     <>
     <NieuweLeverancierModal
-      open={nieuweLevOpen}
-      onClose={() => setNieuweLevOpen(false)}
+      open={nieuweLevOpen || !!editLev}
+      mode={editLev ? "edit" : "create"}
+      initialData={editLev ? { ID: editLev.ID } : undefined}
+      onClose={() => { setNieuweLevOpen(false); setEditLev(null); }}
       onAangemaakt={(lev) => {
         // Voeg toe aan lokale lijst en selecteer direct
         setLeveranciers((prev) => [...prev, lev].sort((a, b) => a.Name.localeCompare(b.Name)));
@@ -222,6 +225,7 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
             <LeverancierSelect
               leveranciers={leveranciers}
               value={velden.leverancier_id}
+              onEdit={(lev) => setEditLev(lev)}
               onChange={(lev) => {
                 if (lev) {
                   setVelden((prev) => ({

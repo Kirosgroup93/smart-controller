@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, ChevronDown, X } from "lucide-react";
+import { Search, ChevronDown, X, Pencil } from "lucide-react";
 
 interface Leverancier {
   ID: string;
@@ -15,10 +15,11 @@ interface Props {
   leveranciers: Leverancier[];
   value: string; // ID
   onChange: (lev: Leverancier | null) => void;
+  onEdit?: (lev: Leverancier) => void;
   disabled?: boolean;
 }
 
-export default function LeverancierSelect({ leveranciers, value, onChange, disabled }: Props) {
+export default function LeverancierSelect({ leveranciers, value, onChange, onEdit, disabled }: Props) {
   const [open, setOpen] = useState(false);
   const [zoek, setZoek] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -86,6 +87,16 @@ export default function LeverancierSelect({ leveranciers, value, onChange, disab
           <span className="text-gray-400">— Selecteer leverancier —</span>
         )}
         <span className="flex items-center gap-1 shrink-0 ml-1">
+          {geselecteerd && onEdit && (
+            <span
+              role="button"
+              onClick={(e) => { e.stopPropagation(); onEdit(geselecteerd); }}
+              title="Bewerken"
+              className="text-gray-300 hover:text-blue-500 p-0.5"
+            >
+              <Pencil className="w-3 h-3" />
+            </span>
+          )}
           {geselecteerd && (
             <span
               role="button"
