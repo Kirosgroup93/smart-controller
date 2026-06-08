@@ -36,7 +36,7 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [pdfFactuur, setPdfFactuur] = useState<string | number | null>(null);
+  const [pdfFactuur, setPdfFactuur] = useState<{ nummer: string | number; id: string } | null>(null);
 
   useEffect(() => {
     fetch(`/api/supabase/financial-data?t=${Date.now()}`)
@@ -63,7 +63,8 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
     <>
       {pdfFactuur !== null && (
         <FactuurPdfModal
-          factuurnummer={pdfFactuur}
+          factuurnummer={pdfFactuur.nummer}
+          invoiceId={pdfFactuur.id}
           onClose={() => setPdfFactuur(null)}
         />
       )}
@@ -115,7 +116,7 @@ export default function InvoiceTable({ userId, type }: { userId: string; type: "
                       <td className="px-4 py-3 text-sm">
                         {inv.InvoiceNumber ? (
                           <button
-                            onClick={() => setPdfFactuur(inv.InvoiceNumber)}
+                            onClick={() => setPdfFactuur({ nummer: inv.InvoiceNumber, id: inv.InvoiceID })}
                             className="text-blue-600 hover:text-blue-800 hover:underline font-medium transition-colors"
                             title="Klik om PDF te bekijken"
                           >
