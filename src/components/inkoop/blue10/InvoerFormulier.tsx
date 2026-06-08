@@ -159,6 +159,14 @@ export default function InvoerFormulier({ doc, onVerwerkt }: Props) {
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error ?? "Fout");
+      // Sla PDF-link op zodat we de PDF later kunnen terugvinden via factuurnummer
+      if (!concept && doc?.storagePath && velden.factuurnummer) {
+        fetch("/api/inkoop/pdf-links", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ factuurnummer: velden.factuurnummer, pdfPath: doc.storagePath }),
+        }).catch(() => {}); // niet fataal
+      }
       setStatus(concept ? "concept_ok" : "verwerkt_ok");
       if (!concept) onVerwerkt();
     } catch (e: unknown) {
