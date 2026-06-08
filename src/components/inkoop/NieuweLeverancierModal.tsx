@@ -74,7 +74,30 @@ export default function NieuweLeverancierModal({ open, onClose, onAangemaakt }: 
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [veldFouten, setVeldFouten] = useState<Record<string, string>>({});
   const naamRef = useRef<HTMLInputElement>(null);
+
+  function isGeldigEmail(v: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.trim());
+  }
+  function isGeldigTelefoon(v: string) {
+    // Staat toe: +31 20 123 4567 / 020-1234567 / +3120123456 etc.
+    return /^[+]?[\d\s\-().]{7,20}$/.test(v.trim());
+  }
+
+  function valideer(): boolean {
+    const fouten: Record<string, string> = {};
+    if (email.trim() && !isGeldigEmail(email))
+      fouten.email = "Ongeldig e-mailadres";
+    if (telefoon.trim() && !isGeldigTelefoon(telefoon))
+      fouten.telefoon = "Ongeldig telefoonnummer";
+    if (contactEmail.trim() && !isGeldigEmail(contactEmail))
+      fouten.contactEmail = "Ongeldig e-mailadres";
+    if (contactTelefoon.trim() && !isGeldigTelefoon(contactTelefoon))
+      fouten.contactTelefoon = "Ongeldig telefoonnummer";
+    setVeldFouten(fouten);
+    return Object.keys(fouten).length === 0;
+  }
 
   useEffect(() => {
     if (open) {
@@ -106,6 +129,7 @@ export default function NieuweLeverancierModal({ open, onClose, onAangemaakt }: 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!naam.trim()) { setError("Leveranciersnaam is verplicht"); return; }
+    if (!valideer()) return;
     setSaving(true); setError(null);
     try {
       const res = await fetch("/api/inkoop/leveranciers", {
@@ -135,6 +159,7 @@ export default function NieuweLeverancierModal({ open, onClose, onAangemaakt }: 
   }
 
   const inp = "w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white disabled:bg-gray-50";
+  const inpFout = "w-full px-3 py-2 text-sm border border-red-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-400 bg-red-50";
   const lbl = "block text-sm text-gray-700 mb-1";
   const row = "grid grid-cols-3 items-start gap-4";
   const labelCol = "text-sm text-gray-700 pt-2";
@@ -248,13 +273,27 @@ export default function NieuweLeverancierModal({ open, onClose, onAangemaakt }: 
               <div className={row}>
                 <span className={labelCol}>Telefoonnummer</span>
                 <div className="col-span-2">
-                  <input className={inp} value={telefoon} onChange={(e) => setTelefoon(e.target.value)} placeholder="+31 20 000 0000" />
+                  <input
+                    className={veldFouten.telefoon ? inpFout : inp}
+                    value={telefoon}
+                    placeholder="+31 20 000 0000"
+                    onChange={(e) => { setTelefoon(e.target.value); setVeldFouten((p) => ({ ...p, telefoon: "" })); }}
+                    onBlur={() => { if (telefoon.trim() && !isGeldigTelefoon(telefoon)) setVeldFouten((p) => ({ ...p, telefoon: "Ongeldig telefoonnummer" })); }}
+                  />
+                  {veldFouten.telefoon && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.telefoon}</p>}
                 </div>
               </div>
               <div className={row}>
                 <span className={labelCol}>E-mailadres</span>
                 <div className="col-span-2">
-                  <input type="email" className={inp} value={email} onChange={(e) => setEmail(e.target.value)} placeholder="info@bedrijf.nl" />
+                  <input
+                    className={veldFouten.email ? inpFout : inp}
+                    value={email}
+                    placeholder="info@bedrijf.nl"
+                    onChange={(e) => { setEmail(e.target.value); setVeldFouten((p) => ({ ...p, email: "" })); }}
+                    onBlur={() => { if (email.trim() && !isGeldigEmail(email)) setVeldFouten((p) => ({ ...p, email: "Ongeldig e-mailadres" })); }}
+                  />
+                  {veldFouten.email && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.email}</p>}
                 </div>
               </div>
             </div>
@@ -336,13 +375,25 @@ export default function NieuweLeverancierModal({ open, onClose, onAangemaakt }: 
                 <div className={row}>
                   <span className={labelCol}>Telefoonnummer</span>
                   <div className="col-span-2">
-                    <input className={inp} value={contactTelefoon} onChange={(e) => setContactTelefoon(e.target.value)} />
+                    <input
+                      className={veldFouten.contactTelefoon ? inpFout : inp}
+                      value={contactTelefoon}
+                      onChange={(e) => { setContactTelefoon(e.target.value); setVeldFouten((p) => ({ ...p, contactTelefoon: "" })); }}
+                      onBlur={() => { if (contactTelefoon.trim() && !isGeldigTelefoon(contactTelefoon)) setVeldFouten((p) => ({ ...p, contactTelefoon: "Ongeldig telefoonnummer" })); }}
+                    />
+                    {veldFouten.contactTelefoon && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.contactTelefoon}</p>}
                   </div>
                 </div>
                 <div className={row}>
                   <span className={labelCol}>E-mailadres</span>
                   <div className="col-span-2">
-                    <input type="email" className={inp} value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
+                    <input
+                      className={veldFouten.contactEmail ? inpFout : inp}
+                      value={contactEmail}
+                      onChange={(e) => { setContactEmail(e.target.value); setVeldFouten((p) => ({ ...p, contactEmail: "" })); }}
+                      onBlur={() => { if (contactEmail.trim() && !isGeldigEmail(contactEmail)) setVeldFouten((p) => ({ ...p, contactEmail: "Ongeldig e-mailadres" })); }}
+                    />
+                    {veldFouten.contactEmail && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.contactEmail}</p>}
                   </div>
                 </div>
                 <div className={row}>
