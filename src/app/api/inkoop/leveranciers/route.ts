@@ -59,6 +59,23 @@ export async function POST(req: Request) {
       );
     }
 
+    // Adres aanmaken via /crm/Addresses (Exact toont adressen vanuit deze sub-resource)
+    if (accountId && (straat?.trim() || postcode?.trim() || stad?.trim())) {
+      const adresPayload: Record<string, unknown> = {
+        Account: accountId,
+        Type: 1, // 1 = Bezoekadres
+      };
+      if (straat?.trim())   adresPayload.AddressLine1 = straat.trim();
+      if (postcode?.trim()) adresPayload.Postcode = postcode.trim();
+      if (stad?.trim())     adresPayload.City = stad.trim();
+      if (land?.trim())     adresPayload.Country = land.trim();
+      try {
+        await exactPost("/crm/Addresses", adresPayload);
+      } catch (e) {
+        console.error("[leveranciers POST] Adres aanmaken mislukt:", e);
+      }
+    }
+
     // Bankrekening aanmaken (apart endpoint)
     if (accountId && iban?.trim()) {
       const bankPayload: Record<string, unknown> = {
