@@ -26,28 +26,40 @@ export async function POST(req: Request) {
 
     if (!naam?.trim()) return NextResponse.json({ error: "Naam is verplicht" }, { status: 400 });
 
-    // Bouw Account payload
+    // Bouw Account payload — alleen velden die Exact Online /crm/Accounts accepteert
     const payload: Record<string, unknown> = {
       Name: naam.trim(),
       IsSupplier: true,
     };
-    if (code?.trim())               payload.Code = code.trim();
-    if (btwNummer?.trim())          payload.VATNumber = btwNummer.trim();
-    if (kvk?.trim())                payload.ChamberOfCommerce = kvk.trim();
-    if (straat?.trim())             payload.AddressLine1 = straat.trim();
-    if (postbus?.trim())            payload.Postbox = postbus.trim();
-    if (postcode?.trim())           payload.Postcode = postcode.trim();
-    if (stad?.trim())               payload.City = stad.trim();
-    if (land?.trim())               payload.Country = land.trim();
-    if (telefoon?.trim())           payload.Phone = telefoon.trim();
-    if (email?.trim())              payload.Email = email.trim();
-    if (valuta?.trim())             payload.Currency = valuta.trim();
-    if (crediteurenRekening?.trim()) payload.GLAccountPurchase = crediteurenRekening.trim();
-    if (betalingsconditie?.trim())  payload.PaymentConditionPurchase = betalingsconditie.trim();
+    // Alleen velden toevoegen die ingevuld zijn (lege strings geven 400)
+    if (code?.trim())      payload.Code = code.trim();
+    if (btwNummer?.trim()) payload.VATNumber = btwNummer.trim();
+    if (kvk?.trim())       payload.ChamberOfCommerce = kvk.trim();
+    if (straat?.trim())    payload.AddressLine1 = straat.trim();
+    if (postcode?.trim())  payload.Postcode = postcode.trim();
+    if (stad?.trim())      payload.City = stad.trim();
+    if (land?.trim())      payload.Country = land.trim();
+    if (telefoon?.trim())  payload.Phone = telefoon.trim();
+    if (email?.trim())     payload.Email = email.trim();
+    if (valuta?.trim())    payload.Currency = valuta.trim();
+    // Postbus, GLAccountPurchase en PaymentConditionPurchase weggelaten
+    // — onzekere veldnamen die 400 kunnen veroorzaken
+
+    console.log("[leveranciers POST] payload:", JSON.stringify(payload));
 
     // Maak account aan in Exact Online
     const account = await exactPost("/crm/Accounts", payload) as Record<string, unknown>;
     const accountId = account?.ID as string | undefined;
+
+    console.log("[leveranciers POST] Exact response:", JSON.stringify(account));
+
+    // Hard check: als Exact geen ID teruggeeft is het account NIET aangemaakt
+    if (!accountId) {
+      return NextResponse.json(
+        { error: `Account niet aangemaakt. Exact response: ${JSON.stringify(account)}` },
+        { status: 500 }
+      );
+    }
 
     // Bankrekening aanmaken (apart endpoint)
     if (accountId && iban?.trim()) {
