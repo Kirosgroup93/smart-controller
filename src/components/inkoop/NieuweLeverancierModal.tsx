@@ -243,15 +243,6 @@ export default function NieuweLeverancierModal({
   const row = "grid grid-cols-3 items-start gap-4";
   const labelCol = "text-sm text-gray-700 pt-2";
 
-  function SectieHeader({ id, titel }: { id: string; titel: string }) {
-    return (
-      <button type="button" onClick={() => toggleSectie(id)}
-        className="flex items-center justify-between w-full py-2 border-b border-gray-200 mb-3">
-        <span className="text-sm font-semibold text-blue-600">{titel}</span>
-        {secties[id] ? <ChevronUp className="w-4 h-4 text-blue-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
-      </button>
-    );
-  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
