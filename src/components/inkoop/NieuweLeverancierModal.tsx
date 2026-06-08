@@ -57,6 +57,20 @@ const LANDEN = [
 
 const VALUTA_OPTIES = ["EUR", "USD", "GBP", "CHF", "DKK", "SEK", "NOK"];
 
+function SectieHeader({ id, titel, secties, toggle }: {
+  id: string; titel: string;
+  secties: Record<string, boolean>;
+  toggle: (id: string) => void;
+}) {
+  return (
+    <button type="button" onClick={() => toggle(id)}
+      className="flex items-center justify-between w-full py-2 border-b border-gray-200 mb-3">
+      <span className="text-sm font-semibold text-blue-600">{titel}</span>
+      {secties[id] ? <ChevronUp className="w-4 h-4 text-blue-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+    </button>
+  );
+}
+
 export default function NieuweLeverancierModal({
   open, mode = "create", initialData, onClose, onAangemaakt,
 }: Props) {
@@ -168,9 +182,7 @@ export default function NieuweLeverancierModal({
 
   if (!open) return null;
 
-  function toggleSectie(s: string) {
-    setSecties((p) => ({ ...p, [s]: !p[s] }));
-  }
+  function toggleSectie(s: string) { setSecties((p) => ({ ...p, [s]: !p[s] })); }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -241,25 +253,6 @@ export default function NieuweLeverancierModal({
     );
   }
 
-  function VeldInput({ id, value, onChange, onBlurCheck, placeholder, type = "text" }: {
-    id: string; value: string; onChange: (v: string) => void;
-    onBlurCheck?: () => void; placeholder?: string; type?: string;
-  }) {
-    return (
-      <div>
-        <input
-          type={type}
-          className={veldFouten[id] ? inpFout : inp}
-          value={value}
-          placeholder={placeholder}
-          onChange={(e) => { onChange(e.target.value); setVeldFouten((p) => ({ ...p, [id]: "" })); }}
-          onBlur={onBlurCheck}
-        />
-        {veldFouten[id] && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten[id]}</p>}
-      </div>
-    );
-  }
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
@@ -306,7 +299,7 @@ export default function NieuweLeverancierModal({
 
               {/* Zoek / Identificatie */}
               <div>
-                <SectieHeader id="leverancier" titel="Zoek een leverancier" />
+                <SectieHeader secties={secties} toggle={toggleSectie} id="leverancier" titel="Zoek een leverancier" />
                 {secties.leverancier && (
                   <div className="space-y-3">
                     <div className={row}>
@@ -342,7 +335,7 @@ export default function NieuweLeverancierModal({
 
               {/* Leveranciersgegevens */}
               <div>
-                <SectieHeader id="leverancierGegevens" titel="Leveranciersgegevens" />
+                <SectieHeader secties={secties} toggle={toggleSectie} id="leverancierGegevens" titel="Leveranciersgegevens" />
                 <div className="space-y-3">
                   <div className={row}>
                     <span className={labelCol}>Straat en huisnummer</span>
@@ -365,17 +358,27 @@ export default function NieuweLeverancierModal({
                   <div className={row}>
                     <span className={labelCol}>Telefoonnummer</span>
                     <div className="col-span-2">
-                      <VeldInput id="telefoon" value={telefoon} onChange={setTelefoon}
+                      <input
+                        className={veldFouten.telefoon ? inpFout : inp}
+                        value={telefoon}
                         placeholder="+31 20 000 0000"
-                        onBlurCheck={() => { if (telefoon.trim() && !isGeldigTelefoon(telefoon)) setVeldFouten((p) => ({ ...p, telefoon: "Ongeldig telefoonnummer" })); }} />
+                        onChange={(e) => { setTelefoon(e.target.value); setVeldFouten((p) => ({ ...p, telefoon: "" })); }}
+                        onBlur={() => { if (telefoon.trim() && !isGeldigTelefoon(telefoon)) setVeldFouten((p) => ({ ...p, telefoon: "Ongeldig telefoonnummer" })); }}
+                      />
+                      {veldFouten.telefoon && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.telefoon}</p>}
                     </div>
                   </div>
                   <div className={row}>
                     <span className={labelCol}>E-mailadres</span>
                     <div className="col-span-2">
-                      <VeldInput id="email" value={email} onChange={setEmail}
+                      <input
+                        className={veldFouten.email ? inpFout : inp}
+                        value={email}
                         placeholder="info@bedrijf.nl"
-                        onBlurCheck={() => { if (email.trim() && !isGeldigEmail(email)) setVeldFouten((p) => ({ ...p, email: "Ongeldig e-mailadres" })); }} />
+                        onChange={(e) => { setEmail(e.target.value); setVeldFouten((p) => ({ ...p, email: "" })); }}
+                        onBlur={() => { if (email.trim() && !isGeldigEmail(email)) setVeldFouten((p) => ({ ...p, email: "Ongeldig e-mailadres" })); }}
+                      />
+                      {veldFouten.email && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.email}</p>}
                     </div>
                   </div>
                 </div>
@@ -383,7 +386,7 @@ export default function NieuweLeverancierModal({
 
               {/* Bankgegevens */}
               <div>
-                <SectieHeader id="bank" titel="Bankgegevens" />
+                <SectieHeader secties={secties} toggle={toggleSectie} id="bank" titel="Bankgegevens" />
                 {secties.bank && (
                   <div className="space-y-3">
                     <div className={row}>
@@ -418,7 +421,7 @@ export default function NieuweLeverancierModal({
 
               {/* Contact */}
               <div>
-                <SectieHeader id="contact" titel="Contact gegevens" />
+                <SectieHeader secties={secties} toggle={toggleSectie} id="contact" titel="Contact gegevens" />
                 {secties.contact && (
                   <div className="space-y-3">
                     <div className={row}>
@@ -436,15 +439,25 @@ export default function NieuweLeverancierModal({
                     <div className={row}>
                       <span className={labelCol}>Telefoonnummer</span>
                       <div className="col-span-2">
-                        <VeldInput id="contactTelefoon" value={contactTelefoon} onChange={setContactTelefoon}
-                          onBlurCheck={() => { if (contactTelefoon.trim() && !isGeldigTelefoon(contactTelefoon)) setVeldFouten((p) => ({ ...p, contactTelefoon: "Ongeldig telefoonnummer" })); }} />
+                        <input
+                          className={veldFouten.contactTelefoon ? inpFout : inp}
+                          value={contactTelefoon}
+                          onChange={(e) => { setContactTelefoon(e.target.value); setVeldFouten((p) => ({ ...p, contactTelefoon: "" })); }}
+                          onBlur={() => { if (contactTelefoon.trim() && !isGeldigTelefoon(contactTelefoon)) setVeldFouten((p) => ({ ...p, contactTelefoon: "Ongeldig telefoonnummer" })); }}
+                        />
+                        {veldFouten.contactTelefoon && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.contactTelefoon}</p>}
                       </div>
                     </div>
                     <div className={row}>
                       <span className={labelCol}>E-mailadres</span>
                       <div className="col-span-2">
-                        <VeldInput id="contactEmail" value={contactEmail} onChange={setContactEmail}
-                          onBlurCheck={() => { if (contactEmail.trim() && !isGeldigEmail(contactEmail)) setVeldFouten((p) => ({ ...p, contactEmail: "Ongeldig e-mailadres" })); }} />
+                        <input
+                          className={veldFouten.contactEmail ? inpFout : inp}
+                          value={contactEmail}
+                          onChange={(e) => { setContactEmail(e.target.value); setVeldFouten((p) => ({ ...p, contactEmail: "" })); }}
+                          onBlur={() => { if (contactEmail.trim() && !isGeldigEmail(contactEmail)) setVeldFouten((p) => ({ ...p, contactEmail: "Ongeldig e-mailadres" })); }}
+                        />
+                        {veldFouten.contactEmail && <p className="text-[11px] text-red-600 mt-0.5">{veldFouten.contactEmail}</p>}
                       </div>
                     </div>
                   </div>
